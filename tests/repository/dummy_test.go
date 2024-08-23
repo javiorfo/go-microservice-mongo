@@ -10,57 +10,59 @@ import (
 	"github.com/javiorfo/go-microservice/domain/repository"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var db *gorm.DB
 var container testcontainers.Container
 var repo repository.DummyRepository
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:latest",
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_USER":     "testuser",
-			"POSTGRES_PASSWORD": "testpass",
-			"POSTGRES_DB":       "testdb",
-		},
-		WaitingFor: wait.ForListeningPort("5432/tcp"),
+    req := testcontainers.ContainerRequest{
+		Image:        "mongo:latest",
+		ExposedPorts: []string{"27017/tcp"},
+		WaitingFor:   wait.ForListeningPort("27017/tcp"),
 	}
 
-	var err error
-	container, err = testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+    mongoContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})
 	if err != nil {
 		log.Fatalf("Failed to start container: %s", err)
 	}
+	defer mongoContainer.Terminate(ctx)
 
-	host, err := container.Host(ctx)
+    host, err := mongoContainer.Host(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get container host: %s", err)
 	}
-	port, err := container.MappedPort(ctx, "5432")
+	port, err := mongoContainer.MappedPort(ctx, "27017")
 	if err != nil {
 		log.Fatalf("Failed to get container port: %s", err)
 	}
-
-	dsn := "host=" + host + " port=" + port.Port() + " user=testuser password=testpass dbname=testdb sslmode=disable"
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    
+    clientOptions := options.Client().ApplyURI("mongodb://" + host + ":" + port.Port())
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %s", err)
+		log.Fatalf("Failed to connect to MongoDB: %s", err)
+	}
+	defer client.Disconnect(ctx)
+
+    if err := client.Ping(ctx, nil); err != nil {
+		log.Fatalf("Failed to ping MongoDB: %s", err)
+	}
+    collection := client.Database("testdb").Collection("testcollection")
+	_, err = collection.InsertOne(ctx, map[string]interface{}{"name": "test"})
+	if err != nil {
+		log.Fatalf("Failed to insert document: %s", err)
 	}
 
-	if err := db.AutoMigrate(&model.Dummy{}); err != nil {
-		log.Fatalf("Failed to migrate database: %s", err)
-	}
+    //
 
-	repo = repository.NewDummyRepository(db)
+	repo = repository.NewDummyRepository(collection)
 
 	// Run the tests
 	code := m.Run()
@@ -81,7 +83,7 @@ func TestDummy(t *testing.T) {
 		t.Fatalf("Failed to insert record: %v", err)
 	}
 
-	dummy, err := repo.FindById(dummyRecord.ID)
+	dummy, err := repo.FindById(dummyRecord.ID.String())
 	if err != nil {
 		t.Fatalf("Failed to query record: %v", err)
 	}
