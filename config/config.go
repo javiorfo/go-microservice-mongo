@@ -2,9 +2,9 @@ package config
 
 import (
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/javiorfo/go-microservice/internal/database"
 	"github.com/javiorfo/go-microservice-lib/env"
 	"github.com/javiorfo/go-microservice-lib/security"
+	"github.com/javiorfo/go-microservice-mongo/internal/database"
 )
 
 // Keycloak configuration
@@ -17,15 +17,15 @@ var KeycloakConfig = security.KeycloakConfig{
 }
 
 var DBDataConnection = database.DBDataConnection{
-	Host:        env.GetEnvOrDefault("DB_HOST", "localhost"),
-	Port:        env.GetEnvOrDefault("DB_PORT", "27017"),
-	DBName:      env.GetEnvOrDefault("DB_NAME", "db_dummy"),
-	User:        env.GetEnvOrDefault("DB_USER", "admin"),
-	Password:    env.GetEnvOrDefault("DB_PASSWORD", "admin"),
+	Host:     env.GetEnvOrDefault("DB_HOST", "localhost"),
+	Port:     env.GetEnvOrDefault("DB_PORT", "27017"),
+	DBName:   env.GetEnvOrDefault("DB_NAME", "db_dummy"),
+	User:     env.GetEnvOrDefault("DB_USER", "admin"),
+	Password: env.GetEnvOrDefault("DB_PASSWORD", "admin"),
 }
 
 // App configuration
-const AppName = "go-microservice"
+const AppName = "go-microservice-mongo"
 const AppPort = ":8080"
 const AppContextPath = "/app"
 

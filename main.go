@@ -13,27 +13,27 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/javiorfo/go-microservice/config"
-	_ "github.com/javiorfo/go-microservice/docs"
-	"github.com/javiorfo/go-microservice/internal/injection"
 	"github.com/javiorfo/go-microservice-lib/tracing"
+	"github.com/javiorfo/go-microservice-mongo/config"
+	_ "github.com/javiorfo/go-microservice-mongo/docs"
+	"github.com/javiorfo/go-microservice-mongo/internal/injection"
 )
 
-//	@contact.name							API Support
-//	@contact.email							fiber@swagger.io
-//	@license.name							Apache 2.0
-//	@license.url							http://www.apache.org/licenses/LICENSE-2.0.html
-//	@securityDefinitions.oauth2.password	OAuth2Password
-//	@tokenUrl								KEYCLOAK_HOST/realms/javi/protocol/openid-connect/token
-//	@scopes.read							Grants read access
-//	@scopes.write							Grants write access
+// @contact.name							API Support
+// @contact.email							fiber@swagger.io
+// @license.name							Apache 2.0
+// @license.url							http://www.apache.org/licenses/LICENSE-2.0.html
+// @securityDefinitions.oauth2.password	OAuth2Password
+// @tokenUrl								KEYCLOAK_HOST/realms/javi/protocol/openid-connect/token
+// @scopes.read							Grants read access
+// @scopes.write							Grants write access
 func main() {
 	// Database
 	cancel, err := config.DBDataConnection.Connect()
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB. \n", err)
 	}
-    defer cancel()
+	defer cancel()
 
 	// Tracing
 	traceProvider, err := tracing.StartTracing(config.TracingHost, config.AppName)

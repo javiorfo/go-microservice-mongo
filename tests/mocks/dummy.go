@@ -1,8 +1,8 @@
 package mocks
 
 import (
-	"github.com/javiorfo/go-microservice/domain/model"
 	"github.com/javiorfo/go-microservice-lib/pagination"
+	"github.com/javiorfo/go-microservice-mongo/domain/model"
 	"github.com/stretchr/testify/mock"
 )
 

@@ -1,5 +1,5 @@
 # Variables
-APP_NAME = go-microservice
+APP_NAME = go-microservice-mongo
 VERSION = 0.0.1
 MAIN_DIR = cmd
 BIN_DIR = bin
@@ -53,12 +53,6 @@ install:
 	@go install github.com/swaggo/swag/cmd/swag@latest
 	@echo "Done!"
 
-.PHONY: migrate
-migrate:
-	@echo "Running database schema migration..."
-	@go run internal/migrator/main.go
-	@echo "Done!"
-
 .PHONY: run
 run:
 	@echo "Running the application $(APP_NAME)..."
@@ -92,7 +86,6 @@ help:
 	@echo "  make help     - Show this help message"
 	@echo "  make info     - Print Info"
 	@echo "  make install  - Install libraries"
-	@echo "  make migrate  - Migrate database schema"
 	@echo "  make run      - Run the application"
 	@echo "  make swagger  - Create swagger api"
 	@echo "  make test     - Run tests"

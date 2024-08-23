@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/javiorfo/go-microservice-lib/pagination"
-	"github.com/javiorfo/go-microservice/domain/model"
-	"github.com/javiorfo/go-microservice/domain/service"
-	"github.com/javiorfo/go-microservice/tests/mocks"
+	"github.com/javiorfo/go-microservice-mongo/domain/model"
+	"github.com/javiorfo/go-microservice-mongo/domain/service"
+	"github.com/javiorfo/go-microservice-mongo/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

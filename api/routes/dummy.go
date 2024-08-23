@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/javiorfo/go-microservice/api/handlers"
-	"github.com/javiorfo/go-microservice/domain/service"
 	"github.com/javiorfo/go-microservice-lib/security"
+	"github.com/javiorfo/go-microservice-mongo/api/handlers"
+	"github.com/javiorfo/go-microservice-mongo/domain/service"
 )
 
 const keycloakRoles = "CLIENT_ADMIN"

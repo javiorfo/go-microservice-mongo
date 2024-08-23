@@ -1,4 +1,4 @@
-module github.com/javiorfo/go-microservice
+module github.com/javiorfo/go-microservice-mongo
 
 go 1.23.0
 

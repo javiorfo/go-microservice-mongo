@@ -6,16 +6,15 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/javiorfo/go-microservice-lib/pagination"
 	"github.com/javiorfo/go-microservice-lib/response"
-	"github.com/javiorfo/go-microservice/api/request"
-	"github.com/javiorfo/go-microservice/api/routes"
-	"github.com/javiorfo/go-microservice/domain/model"
-	"github.com/javiorfo/go-microservice/tests/mocks"
+	"github.com/javiorfo/go-microservice-mongo/api/request"
+	"github.com/javiorfo/go-microservice-mongo/api/routes"
+	"github.com/javiorfo/go-microservice-mongo/domain/model"
+	"github.com/javiorfo/go-microservice-mongo/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -41,18 +40,14 @@ func TestFindById(t *testing.T) {
 	}{
 		{"1", &model.Dummy{Info: "info"}, nil, fiber.StatusOK},
 		{"2", nil, errors.New("Dummy not found"), fiber.StatusNotFound},
-		{"invalid", nil, nil, fiber.StatusBadRequest},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.id, func(t *testing.T) {
 			app, mockService := setupTest()
-			if tt.id != "invalid" {
-				id, _ := strconv.Atoi(tt.id)
-				mockService.On("FindById", uint(id)).Return(tt.mockReturn, tt.mockError)
-			}
+			mockService.On("FindById", tt.id).Return(tt.mockReturn, tt.mockError)
 
-			req := httptest.NewRequest("GET", "/dummy/"+tt.id, nil)
+			req := httptest.NewRequest(fiber.MethodGet, "/dummy/"+tt.id, nil)
 			resp, err := app.Test(req)
 
 			assert.NoError(t, err)
@@ -77,7 +72,7 @@ func TestFindAll(t *testing.T) {
 		page := pagination.Page{Page: 1, Size: 10, SortBy: "info", SortOrder: "asc"}
 		mockService.On("FindAll", page).Return([]model.Dummy{{ID: primitive.NewObjectID(), Info: "info"}}, nil)
 
-		req := httptest.NewRequest("GET", "/dummy?page=1&size=10&sortBy=info&sortOrder=asc", nil)
+		req := httptest.NewRequest(fiber.MethodGet, "/dummy?page=1&size=10&sortBy=info&sortOrder=asc", nil)
 		resp, err := app.Test(req)
 
 		assert.NoError(t, err)
@@ -95,7 +90,7 @@ func TestFindAll(t *testing.T) {
 		app, mockService := setupTest()
 		mockService.On("FindAll", mock.Anything).Return(nil, errors.New("data source error"))
 
-		req := httptest.NewRequest("GET", "/dummy?page=1&size=10&sortBy=id&sortOrder=asc", nil)
+		req := httptest.NewRequest(fiber.MethodGet, "/dummy?page=1&size=10&sortBy=id&sortOrder=asc", nil)
 		resp, err := app.Test(req)
 
 		assert.NoError(t, err)
@@ -107,7 +102,7 @@ func TestFindAll(t *testing.T) {
 	t.Run("Pagination Bad Request", func(t *testing.T) {
 		app, _ := setupTest()
 
-		req := httptest.NewRequest("GET", "/dummy?page=invalid&size=10&sortBy=id&sortOrder=asc", nil)
+		req := httptest.NewRequest(fiber.MethodGet, "/dummy?page=invalid&size=10&sortBy=id&sortOrder=asc", nil)
 		resp, err := app.Test(req)
 
 		assert.NoError(t, err)
@@ -125,7 +120,7 @@ func TestCreate(t *testing.T) {
 		mockService.On("Create", mock.Anything).Return(nil)
 
 		body, _ := json.Marshal(dummyRequest)
-		req := httptest.NewRequest("POST", "/dummy", bytes.NewBuffer(body))
+		req := httptest.NewRequest(fiber.MethodPost, "/dummy", bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := app.Test(req)

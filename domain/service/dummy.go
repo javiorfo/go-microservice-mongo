@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/javiorfo/go-microservice/domain/model"
-	"github.com/javiorfo/go-microservice/domain/repository"
 	"github.com/javiorfo/go-microservice-lib/pagination"
+	"github.com/javiorfo/go-microservice-mongo/domain/model"
+	"github.com/javiorfo/go-microservice-mongo/domain/repository"
 )
 
 type DummyService interface {

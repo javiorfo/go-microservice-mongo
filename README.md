@@ -31,7 +31,7 @@ Golang, Docker, Make, [Swag tool](https://github.com/swaggo/swag)
     - Testcontainers for testing
 
 ## Files
-- [Dockerfile](https://github.com/javiorfo/go-microservice/tree/master/Dockerfile)
+- [Dockerfile](https://github.com/javiorfo/go-microservice-mongo/tree/master/Dockerfile)
 - [Ship files](https://github.com/javiorfo/java-spring3-microservice/tree/master/ships)
     - For those using Neovim and [this plugin](https://github.com/javiorfo/nvim-ship)
 

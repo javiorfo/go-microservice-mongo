@@ -7,7 +7,7 @@ import (
 
 // Dummy represents a dada structure
 type Dummy struct {
-	ID   primitive.ObjectID `json:"id"`
-	Info string             `json:"info"`
+	ID   primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Info string             `json:"info" bson:"info"`
 	auditory.Auditable
 }

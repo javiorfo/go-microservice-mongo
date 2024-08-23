@@ -6,27 +6,26 @@ import (
 	"os"
 	"testing"
 
-	"github.com/javiorfo/go-microservice/domain/model"
-	"github.com/javiorfo/go-microservice/domain/repository"
+	"github.com/javiorfo/go-microservice-mongo/domain/model"
+	"github.com/javiorfo/go-microservice-mongo/domain/repository"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var container testcontainers.Container
 var repo repository.DummyRepository
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-    req := testcontainers.ContainerRequest{
+	req := testcontainers.ContainerRequest{
 		Image:        "mongo:latest",
 		ExposedPorts: []string{"27017/tcp"},
 		WaitingFor:   wait.ForListeningPort("27017/tcp"),
 	}
 
-    mongoContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+	mongoContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
 	})
@@ -35,7 +34,7 @@ func TestMain(m *testing.M) {
 	}
 	defer mongoContainer.Terminate(ctx)
 
-    host, err := mongoContainer.Host(ctx)
+	host, err := mongoContainer.Host(ctx)
 	if err != nil {
 		log.Fatalf("Failed to get container host: %s", err)
 	}
@@ -43,34 +42,23 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("Failed to get container port: %s", err)
 	}
-    
-    clientOptions := options.Client().ApplyURI("mongodb://" + host + ":" + port.Port())
+
+	clientOptions := options.Client().ApplyURI("mongodb://" + host + ":" + port.Port())
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %s", err)
 	}
 	defer client.Disconnect(ctx)
 
-    if err := client.Ping(ctx, nil); err != nil {
+	if err := client.Ping(ctx, nil); err != nil {
 		log.Fatalf("Failed to ping MongoDB: %s", err)
 	}
-    collection := client.Database("testdb").Collection("testcollection")
-	_, err = collection.InsertOne(ctx, map[string]interface{}{"name": "test"})
-	if err != nil {
-		log.Fatalf("Failed to insert document: %s", err)
-	}
-
-    //
+	collection := client.Database("testdb").Collection("dummies")
 
 	repo = repository.NewDummyRepository(collection)
 
 	// Run the tests
 	code := m.Run()
-
-	// Cleanup
-	if err := container.Terminate(ctx); err != nil {
-		log.Fatalf("Failed to terminate container: %s", err)
-	}
 
 	os.Exit(code)
 }
@@ -83,7 +71,7 @@ func TestDummy(t *testing.T) {
 		t.Fatalf("Failed to insert record: %v", err)
 	}
 
-	dummy, err := repo.FindById(dummyRecord.ID.String())
+	dummy, err := repo.FindById(dummyRecord.ID.Hex())
 	if err != nil {
 		t.Fatalf("Failed to query record: %v", err)
 	}
