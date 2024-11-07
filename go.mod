@@ -1,13 +1,13 @@
 module github.com/javiorfo/go-microservice-mongo
 
-go 1.23.0
+go 1.23.2
 
 require (
 	github.com/Nerzal/gocloak/v13 v13.9.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/swagger v1.1.0
-	github.com/javiorfo/go-microservice-lib v0.0.0-20241026132359-32ac0afff0fa
+	github.com/javiorfo/go-microservice-lib v0.0.0-20241107131314-b3f6c3b0546a
 	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/swag v1.16.3
 	github.com/testcontainers/testcontainers-go v0.32.0
@@ -52,6 +52,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
+	github.com/javiorfo/steams v0.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
