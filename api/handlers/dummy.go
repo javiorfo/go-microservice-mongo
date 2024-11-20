@@ -1,15 +1,17 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"net/http"
 
 	"github.com/javiorfo/go-microservice-lib/auditory"
 	"github.com/javiorfo/go-microservice-lib/pagination"
 	"github.com/javiorfo/go-microservice-lib/response"
 	"github.com/javiorfo/go-microservice-lib/response/codes"
+	"github.com/javiorfo/go-microservice-lib/security"
 	"github.com/javiorfo/go-microservice-lib/tracing"
 	"github.com/javiorfo/go-microservice-mongo/api/request"
 	"github.com/javiorfo/go-microservice-mongo/domain/model"
@@ -121,7 +123,7 @@ func CreateDummy(ds service.DummyService) fiber.Handler {
 		dummy := model.Dummy{
 			Info: dummyRequest.Info,
 			Auditable: auditory.Auditable{
-				CreatedBy: auditory.GetTokenUser(c),
+				CreatedBy: security.GetTokenUsername(c),
 			},
 		}
 		err := ds.Create(&dummy)
