@@ -6,6 +6,8 @@ import (
 	"github.com/javiorfo/go-microservice-lib/security"
 	"github.com/javiorfo/go-microservice-mongo/internal/database"
 )
+// IMPORTANT 
+// If .env exits it uses the environment variables, otherwise the fallback
 
 // Keycloak configuration
 var KeycloakConfig = security.KeycloakConfig{
