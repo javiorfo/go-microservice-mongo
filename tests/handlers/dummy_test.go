@@ -2,6 +2,7 @@ package dummy_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.opentelemetry.io/otel"
 )
 
 func setupTest() (*fiber.App, *mocks.MockDummyService) {
@@ -32,6 +34,10 @@ func setupTest() (*fiber.App, *mocks.MockDummyService) {
 
 // FIND BY ID
 func TestFindById(t *testing.T) {
+	tracer := otel.Tracer("GetDummyById")
+	ctx, span := tracer.Start(context.Background(), "mockpath")
+	defer span.End()
+
 	tests := []struct {
 		id           string
 		mockReturn   *model.Dummy
@@ -45,7 +51,7 @@ func TestFindById(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.id, func(t *testing.T) {
 			app, mockService := setupTest()
-			mockService.On("FindById", tt.id).Return(tt.mockReturn, tt.mockError)
+			mockService.On("FindById", ctx, tt.id).Return(tt.mockReturn, tt.mockError)
 
 			req := httptest.NewRequest(fiber.MethodGet, "/dummy/"+tt.id, nil)
 			resp, err := app.Test(req)
@@ -66,11 +72,14 @@ func TestFindById(t *testing.T) {
 
 // FIND ALL
 func TestFindAll(t *testing.T) {
+	tracer := otel.Tracer("GetDummies")
+	ctx, span := tracer.Start(context.Background(), "mockpath")
+	defer span.End()
 
 	t.Run("Successful", func(t *testing.T) {
 		app, mockService := setupTest()
 		page := pagination.Page{Page: 1, Size: 10, SortBy: "info", SortOrder: "asc"}
-		mockService.On("FindAll", page).Return([]model.Dummy{{ID: primitive.NewObjectID(), Info: "info"}}, nil)
+		mockService.On("FindAll", ctx, page).Return([]model.Dummy{{ID: primitive.NewObjectID(), Info: "info"}}, nil)
 
 		req := httptest.NewRequest(fiber.MethodGet, "/dummy?page=1&size=10&sortBy=info&sortOrder=asc", nil)
 		resp, err := app.Test(req)
@@ -88,7 +97,7 @@ func TestFindAll(t *testing.T) {
 
 	t.Run("DB Error", func(t *testing.T) {
 		app, mockService := setupTest()
-		mockService.On("FindAll", mock.Anything).Return(nil, errors.New("data source error"))
+		mockService.On("FindAll", ctx, mock.Anything).Return(nil, errors.New("data source error"))
 
 		req := httptest.NewRequest(fiber.MethodGet, "/dummy?page=1&size=10&sortBy=id&sortOrder=asc", nil)
 		resp, err := app.Test(req)
@@ -112,12 +121,15 @@ func TestFindAll(t *testing.T) {
 
 // CREATE
 func TestCreate(t *testing.T) {
+	tracer := otel.Tracer("CreateDummy")
+	ctx, span := tracer.Start(context.Background(), "mockpath")
+	defer span.End()
 
 	t.Run("Successful", func(t *testing.T) {
 		app, mockService := setupTest()
 
 		dummyRequest := request.Dummy{Info: "dummy info"}
-		mockService.On("Create", mock.Anything).Return(nil)
+		mockService.On("Create", ctx, mock.Anything).Return(nil)
 
 		body, _ := json.Marshal(dummyRequest)
 		req := httptest.NewRequest(fiber.MethodPost, "/dummy", bytes.NewBuffer(body))
@@ -152,7 +164,7 @@ func TestCreate(t *testing.T) {
 		app, mockService := setupTest()
 
 		dummyRequest := request.Dummy{Info: "test info"}
-		mockService.On("Create", mock.Anything).Return(errors.New("service error"))
+		mockService.On("Create", ctx, mock.Anything).Return(errors.New("service error"))
 
 		body, _ := json.Marshal(dummyRequest)
 		req := httptest.NewRequest(fiber.MethodPost, "/dummy", bytes.NewBuffer(body))

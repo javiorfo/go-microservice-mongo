@@ -67,11 +67,12 @@ func TestDummy(t *testing.T) {
 
 	dummyRecord := model.Dummy{Info: "testname"}
 
-	if err := repo.Create(&dummyRecord); err != nil {
+	ctx := context.Background()
+	if err := repo.Create(ctx, &dummyRecord); err != nil {
 		t.Fatalf("Failed to insert record: %v", err)
 	}
 
-	dummy, err := repo.FindById(dummyRecord.ID.Hex())
+	dummy, err := repo.FindById(ctx, dummyRecord.ID.Hex())
 	if err != nil {
 		t.Fatalf("Failed to query record: %v", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"go.opentelemetry.io/otel"
 
 	"github.com/javiorfo/go-microservice-lib/auditory"
 	"github.com/javiorfo/go-microservice-lib/pagination"
@@ -30,19 +31,23 @@ import (
 // @Router			/dummy/{id} [get]
 // @Security		OAuth2Password
 func GetDummyById(ds service.DummyService) fiber.Handler {
+	tracer := otel.Tracer(tracing.Name())
 	return func(c *fiber.Ctx) error {
+		ctx, span := tracer.Start(c.UserContext(), c.Path())
+		defer span.End()
+
 		param := c.Params("id")
-		log.Infof("%s Find dummy by ID: %v", tracing.LogTraceAndSpan(c), param)
+		log.Infof("%s Find dummy by ID: %v", tracing.LogTraceAndSpan(span), param)
 
 		if param == "" {
 			log.Error("Invalid ID")
 			return c.Status(fiber.StatusBadRequest).
-				JSON(response.NewRestResponseErrorWithCodeAndMsg(c, codes.DUMMY_FIND_ERROR, "Invalid ID"))
+				JSON(response.NewRestResponseErrorWithCodeAndMsg(span, codes.DUMMY_FIND_ERROR, "Invalid ID"))
 		}
 
-		if dummy, err := ds.FindById(param); err != nil {
+		if dummy, err := ds.FindById(ctx, param); err != nil {
 			return c.Status(http.StatusNotFound).
-				JSON(response.NewRestResponseErrorWithCodeAndMsg(c, codes.DUMMY_FIND_ERROR, err.Error()))
+				JSON(response.NewRestResponseErrorWithCodeAndMsg(span, codes.DUMMY_FIND_ERROR, err.Error()))
 		} else {
 			return c.JSON(dummy)
 		}
@@ -64,25 +69,29 @@ func GetDummyById(ds service.DummyService) fiber.Handler {
 // @Router			/dummy [get]
 // @Security		OAuth2Password
 func GetDummies(ds service.DummyService) fiber.Handler {
+	tracer := otel.Tracer(tracing.Name())
 	return func(c *fiber.Ctx) error {
+		ctx, span := tracer.Start(c.UserContext(), c.Path())
+		defer span.End()
+
 		p := c.Query("page", "1")
 		s := c.Query("size", "10")
 		sb := c.Query("sortBy", "id")
 		so := c.Query("sortOrder", "asc")
 
-		log.Infof("%s Listing dummies...", tracing.LogTraceAndSpan(c))
-		log.Infof("%s page %s, size %s, sortBy %s, sortOrder %s ", tracing.LogTraceAndSpan(c), p, s, sb, so)
+		log.Infof("%s Listing dummies...", tracing.LogTraceAndSpan(span))
+		log.Infof("%s page %s, size %s, sortBy %s, sortOrder %s ", tracing.LogTraceAndSpan(span), p, s, sb, so)
 
 		page, err := pagination.ValidateAndGetPage(p, s, sb, so)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).
-				JSON(response.NewRestResponseErrorWithCodeAndMsg(c, codes.DUMMY_FIND_ERROR, err.Error()))
+				JSON(response.NewRestResponseErrorWithCodeAndMsg(span, codes.DUMMY_FIND_ERROR, err.Error()))
 		}
 
-		dummies, err := ds.FindAll(*page)
+		dummies, err := ds.FindAll(ctx, *page)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).
-				JSON(response.InternalServerError(c, err.Error()))
+				JSON(response.InternalServerError(span, err.Error()))
 		}
 
 		return c.JSON(response.RestResponsePagination[model.Dummy]{
@@ -104,21 +113,25 @@ func GetDummies(ds service.DummyService) fiber.Handler {
 // @Router			/dummy [post]
 // @Security		OAuth2Password
 func CreateDummy(ds service.DummyService) fiber.Handler {
+	tracer := otel.Tracer(tracing.Name())
 	return func(c *fiber.Ctx) error {
+		ctx, span := tracer.Start(c.UserContext(), c.Path())
+		defer span.End()
+
 		dummyRequest := new(request.Dummy)
 
 		if err := c.BodyParser(dummyRequest); err != nil {
 			return c.Status(http.StatusBadRequest).
-				JSON(response.NewRestResponseErrorWithCodeAndMsg(c, codes.DUMMY_CREATE_ERROR, "Invalid request body"))
+				JSON(response.NewRestResponseErrorWithCodeAndMsg(span, codes.DUMMY_CREATE_ERROR, "Invalid request body"))
 		}
 		validate := validator.New()
 		if err := validate.Struct(dummyRequest); err != nil {
 			validationErrors := err.(validator.ValidationErrors)
 			return c.Status(fiber.StatusBadRequest).
-				JSON(response.NewRestResponseErrorWithCodeAndMsg(c, codes.DUMMY_CREATE_ERROR, validationErrors.Error()))
+				JSON(response.NewRestResponseErrorWithCodeAndMsg(span, codes.DUMMY_CREATE_ERROR, validationErrors.Error()))
 		}
 
-		log.Infof("%s Received dummy: %+v", tracing.LogTraceAndSpan(c), dummyRequest)
+		log.Infof("%s Received dummy: %+v", tracing.LogTraceAndSpan(span), dummyRequest)
 
 		dummy := model.Dummy{
 			Info: dummyRequest.Info,
@@ -126,11 +139,11 @@ func CreateDummy(ds service.DummyService) fiber.Handler {
 				CreatedBy: security.GetTokenUsername(c),
 			},
 		}
-		err := ds.Create(&dummy)
+		err := ds.Create(ctx, &dummy)
 
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).
-				JSON(response.InternalServerError(c, err.Error()))
+				JSON(response.InternalServerError(span, err.Error()))
 		}
 
 		return c.Status(fiber.StatusCreated).JSON(dummy)

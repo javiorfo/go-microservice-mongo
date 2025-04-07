@@ -1,6 +1,7 @@
 package dummy_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -19,9 +20,10 @@ func TestFindById(t *testing.T) {
 	id := "1"
 	expectedDummy := &model.Dummy{ID: primitive.NewObjectID()}
 
-	mockRepo.On("FindById", id).Return(expectedDummy, nil)
+	ctx := context.Background()
+	mockRepo.On("FindById", ctx, id).Return(expectedDummy, nil)
 
-	result, err := dummyService.FindById(id)
+	result, err := dummyService.FindById(ctx, id)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedDummy, result)
@@ -34,9 +36,10 @@ func TestFindByIdNotFound(t *testing.T) {
 
 	id := "1"
 
-	mockRepo.On("FindById", id).Return(nil, errors.New("not found"))
+	ctx := context.Background()
+	mockRepo.On("FindById", ctx, id).Return(nil, errors.New("not found"))
 
-	result, err := dummyService.FindById(id)
+	result, err := dummyService.FindById(ctx, id)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -53,9 +56,10 @@ func TestFindAll(t *testing.T) {
 		{ID: primitive.NewObjectID()},
 	}
 
-	mockRepo.On("FindAll", page).Return(expectedDummies, nil)
+	ctx := context.Background()
+	mockRepo.On("FindAll", ctx, page).Return(expectedDummies, nil)
 
-	result, err := dummyService.FindAll(page)
+	result, err := dummyService.FindAll(ctx, page)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedDummies, result)
@@ -68,9 +72,10 @@ func TestCreate(t *testing.T) {
 
 	newDummy := &model.Dummy{ID: primitive.NewObjectID()}
 
-	mockRepo.On("Create", newDummy).Return(nil)
+	ctx := context.Background()
+	mockRepo.On("Create", ctx, newDummy).Return(nil)
 
-	err := dummyService.Create(newDummy)
+	err := dummyService.Create(ctx, newDummy)
 
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
